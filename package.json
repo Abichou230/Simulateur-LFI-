@@ -1,0 +1,8 @@
+{
+  "name": "simulateur-lfi",
+  "version": "1.0.0",
+  "description": "Simulateur impôt et retraite selon les mesures de LFI",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

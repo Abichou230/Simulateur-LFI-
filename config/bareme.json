@@ -1,0 +1,36 @@
+{
+  "version": "2026-10-28",
+  "avertissement": "Programme LFI en cours de réécriture (5e édition prévue le 6 novembre 2026). Valeurs à mettre à jour après publication.",
+  "impot": {
+    "actuel": [
+      { "seuil": 0, "taux": 0 },
+      { "seuil": 11600, "taux": 0.11 },
+      { "seuil": 29579, "taux": 0.30 },
+      { "seuil": 84577, "taux": 0.41 },
+      { "seuil": 181917, "taux": 0.45 }
+    ],
+    "lfi_reference_2022": [
+      { "seuil": 0, "taux": 0.01 },
+      { "seuil": 10292, "taux": 0.05 },
+      { "seuil": 15438, "taux": 0.10 },
+      { "seuil": 20584, "taux": 0.15 },
+      { "seuil": 27789, "taux": 0.20 },
+      { "seuil": 30876, "taux": 0.25 },
+      { "seuil": 33964, "taux": 0.30 },
+      { "seuil": 38081, "taux": 0.35 },
+      { "seuil": 44256, "taux": 0.40 },
+      { "seuil": 61752, "taux": 0.45 },
+      { "seuil": 102921, "taux": 0.50 },
+      { "seuil": 144089, "taux": 0.55 },
+      { "seuil": 267594, "taux": 0.60 },
+      { "seuil": 411683, "taux": 0.90 }
+    ],
+    "coefficient_revalorisation_defaut": 1.127089
+  },
+  "retraite": {
+    "actuelle": { "age_legal": 64, "trimestres": 172 },
+    "lfi": { "age_legal": 60, "trimestres": 160 },
+    "lfi_etape": { "age_legal": 62, "trimestres": 160 },
+    "age_taux_plein_automatique": 67
+  }
+}

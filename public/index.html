@@ -1,0 +1,284 @@
+<title>Simulateur Impôt et Retraite LFI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: en-tête sombre violet, deux onglets (impôt / retraite), formulaire à gauche, résultats à droite; une colonne sur téléphone. */
+:root{
+  --bg:#f7f3f6; --surface:#ffffff; --ink:#1e1633; --muted:#5f5578; --line:#e3dbe6;
+  --violet:#2a1a4f; --violet-soft:#ece4f6; --red:#d61f3a; --red-soft:#fde6ea;
+  --good:#2b6c4f; --good-soft:#dff1e8; --warn:#b3261e; --warn-soft:#fde6e3;
+  --head:#2a1a4f; --head-ink:#ffffff; --focus:#4b2e8c;
+  --display:"Archivo","Arial Black",Arial,sans-serif; --body:"Public Sans",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#150e2b; --surface:#201640; --ink:#f1ecfa; --muted:#b3a8cf; --line:#382c5e;
+  --violet:#c9b6f2; --violet-soft:#2e2152; --red:#ff6b81; --red-soft:#4a1d2e;
+  --good:#7fd6aa; --good-soft:#1d3a30; --warn:#ff9a90; --warn-soft:#4a2320;
+  --head:#0f0922; --head-ink:#ffffff; --focus:#c9b6f2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#150e2b; --surface:#201640; --ink:#f1ecfa; --muted:#b3a8cf; --line:#382c5e;
+  --violet:#c9b6f2; --violet-soft:#2e2152; --red:#ff6b81; --red-soft:#4a1d2e;
+  --good:#7fd6aa; --good-soft:#1d3a30; --warn:#ff9a90; --warn-soft:#4a2320;
+  --head:#0f0922; --head-ink:#ffffff; --focus:#c9b6f2; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+header{margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:28px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));background:var(--head);color:var(--head-ink)}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.05;margin:0 0 8px;text-wrap:balance;letter-spacing:-.01em}
+.sub{margin:0 0 20px;max-width:62ch;color:#d9cdf3;font-size:1rem}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{font:600 1rem var(--body);border:0;background:transparent;color:#d9cdf3;padding:12px 18px;border-radius:10px 10px 0 0;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--bg);color:var(--ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+main{max-width:1080px;margin:0 auto;padding-block:24px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.panel h2{font-family:var(--display);font-size:1.05rem;margin:0 0 14px;font-weight:700}
+label{display:block;font-weight:600;font-size:.92rem;margin:14px 0 6px}
+.hint{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+input[type=number],select{width:100%;font:500 1.05rem var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--red)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:500 .85rem var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--red)}
+details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.card .k{font-size:.82rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.card .v{font-family:var(--display);font-weight:800;font-size:1.9rem;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.card .s{font-size:.88rem;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.card.res{border-color:transparent}
+.card.res.up{background:var(--warn-soft)} .card.res.up .v{color:var(--warn)}
+.card.res.down{background:var(--good-soft)} .card.res.down .v{color:var(--good)}
+.card.res.flat{background:var(--violet-soft)}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:20px}
+.chartbox h3,.tablebox h3{font-family:var(--display);font-size:1rem;margin:0 0 8px}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.88rem;margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:20px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+tr.on td{background:var(--violet-soft);font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.col .t{font-size:.82rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.col .big{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1.1;margin:6px 0;font-variant-numeric:tabular-nums}
+.col.lfi .big{color:var(--red)}
+.col dl{margin:8px 0 0;font-size:.9rem}
+.col dt{color:var(--muted);float:left;clear:left;margin-right:6px}
+.col dd{margin:0 0 4px;font-variant-numeric:tabular-nums}
+.delta{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:999px;background:var(--good-soft);color:var(--good);font-weight:600;font-size:.88rem}
+.delta.zero{background:var(--violet-soft);color:var(--violet)}
+.note{background:var(--violet-soft);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--ink)}
+.note ul{margin:6px 0 0;padding-left:20px} .note li{margin:3px 0}
+.hidden{display:none}
+.bar{display:flex;gap:6px;align-items:center;margin-top:8px}
+footer{max-width:1080px;margin:0 auto;padding-bottom:40px;color:var(--muted);font-size:.85rem}
+.tt{position:absolute}
+@media (prefers-reduced-motion:no-preference){.card .v,.col .big{transition:color .2s}}
+</style>
+
+<header>
+  <div class="wrap">
+    <h1>Votre impôt et votre retraite avec le programme de LFI</h1>
+    <p class="sub">Entrez votre situation. Le simulateur applique les mesures proposées par La France insoumise et les compare aux règles en vigueur.</p>
+    <div class="tabs" role="tablist" aria-label="Simulations">
+      <button class="tab" role="tab" id="tab-impot" aria-selected="true" aria-controls="p-impot">Impôt sur le revenu</button>
+      <button class="tab" role="tab" id="tab-retraite" aria-selected="false" aria-controls="p-retraite">Âge de départ à la retraite</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ========== IMPOT ========== -->
+<section id="p-impot" role="tabpanel" aria-labelledby="tab-impot" class="grid">
+  <div class="panel">
+    <h2>Votre foyer</h2>
+    <label for="rev">Revenu net imposable annuel (€)</label>
+    <input id="rev" type="number" min="0" step="500" value="36000" inputmode="numeric">
+    <input id="revr" type="range" min="0" max="300000" step="500" value="36000" aria-label="Curseur du revenu">
+    <div class="presets" id="presets"></div>
+    <label for="parts">Nombre de parts</label>
+    <select id="parts">
+      <option value="1">1 : personne seule</option>
+      <option value="1.5">1,5 : seule avec 1 enfant (ou demi-part)</option>
+      <option value="2">2 : couple</option>
+      <option value="2.5">2,5 : couple avec 1 enfant</option>
+      <option value="3">3 : couple avec 2 enfants</option>
+      <option value="4">4 : couple avec 3 enfants</option>
+    </select>
+    <p class="hint">Le revenu net imposable est celui de votre avis d'imposition, après abattement de 10 %.</p>
+    <details>
+      <summary>Hypothèses modifiables</summary>
+      <label for="coef">Revalorisation du barème LFI</label>
+      <input id="coef" type="number" min="0.5" max="2" step="0.01" value="1.1271">
+      <p class="hint">Le barème à 14 tranches vient d'un amendement LFI de 2022. Par défaut, ses seuils sont relevés pour que la deuxième tranche commence à 11 600 €, comme le barème actuel.</p>
+    </details>
+  </div>
+
+  <div>
+    <div class="cards" aria-live="polite">
+      <div class="card"><div class="k">Impôt actuel</div><div class="v" id="r-cur">–</div><div class="s" id="r-cur-s"></div></div>
+      <div class="card"><div class="k">Avec le barème LFI</div><div class="v" id="r-lfi">–</div><div class="s" id="r-lfi-s"></div></div>
+      <div class="card res" id="r-diff-card"><div class="k">Écart par an</div><div class="v" id="r-diff">–</div><div class="s" id="r-diff-s"></div></div>
+    </div>
+
+    <div class="chartbox">
+      <h3>Impôt selon le revenu</h3>
+      <div class="legend"><span><i style="background:var(--muted)"></i>Règle actuelle</span><span><i style="background:var(--red)"></i>Barème LFI</span><span><i style="background:var(--violet);height:10px;width:10px;border-radius:50%"></i>Votre revenu</span></div>
+      <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Courbes de l'impôt actuel et de l'impôt avec le barème LFI selon le revenu"></svg>
+    </div>
+
+    <div class="tablebox">
+      <h3>Détail par tranche (par part)</h3>
+      <div class="scroll"><table id="tbl"></table></div>
+    </div>
+
+    <div class="note">
+      <strong>Ce que le calcul ne prend pas en compte</strong>
+      <ul>
+        <li>La décote, le plafonnement du quotient familial, la CSG, la flat tax sur le capital et l'impôt sur la fortune.</li>
+        <li>Les autres mesures fiscales de LFI (CSG progressive, ISF rétabli, héritage). Le programme complet sort le 6 novembre 2026 : ces chiffres seront à réviser.</li>
+        <li>Les sources divergent sur le taux supérieur : 90 % dans l'amendement de 2022, 82 % cité pour 2027.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========== RETRAITE ========== -->
+<section id="p-retraite" role="tabpanel" aria-labelledby="tab-retraite" class="grid hidden">
+  <div class="panel">
+    <h2>Votre carrière</h2>
+    <label for="birth">Année de naissance</label>
+    <input id="birth" type="number" min="1950" max="2010" step="1" value="1975" inputmode="numeric">
+    <label for="start">Âge au premier emploi</label>
+    <input id="start" type="number" min="14" max="35" step="1" value="22" inputmode="numeric">
+    <label for="gap">Années sans cotisation</label>
+    <input id="gap" type="number" min="0" max="30" step="0.5" value="0">
+    <p class="hint">Chômage non indemnisé, études non validées, inactivité.</p>
+    <details>
+      <summary>Hypothèses modifiables</summary>
+      <label for="tpy">Trimestres validés par an</label>
+      <input id="tpy" type="number" min="1" max="4" step="1" value="4">
+      <label for="a-legal">Âge légal : actuel / LFI</label>
+      <div style="display:flex;gap:8px"><input id="a-legal" type="number" value="64" aria-label="Âge légal actuel"><input id="l-legal" type="number" value="60" aria-label="Âge légal LFI"></div>
+      <label for="a-trim">Trimestres requis : actuel / LFI</label>
+      <div style="display:flex;gap:8px"><input id="a-trim" type="number" value="172" aria-label="Trimestres requis actuels"><input id="l-trim" type="number" value="160" aria-label="Trimestres requis LFI"></div>
+      <label for="auto">Âge du taux plein automatique</label>
+      <input id="auto" type="number" value="67">
+      <label for="step-legal">Étape intermédiaire LFI : âge légal</label>
+      <input id="step-legal" type="number" value="62">
+    </details>
+  </div>
+
+  <div>
+    <div class="cols" id="cols" aria-live="polite"></div>
+    <div class="note">
+      <strong>Comment c'est calculé</strong>
+      <ul>
+        <li>Âge de départ à taux plein = le plus élevé entre l'âge légal et l'âge où vous avez validé tous vos trimestres, sans dépasser l'âge du taux plein automatique.</li>
+        <li>Règle actuelle : 64 ans et 172 trimestres pour les personnes nées en 1969 ou après. Pour les générations plus anciennes, ajustez dans les hypothèses.</li>
+        <li>Objectif LFI : retraite à 60 ans avec 40 annuités (160 trimestres). Une étape à 62 ans a été rapportée par la presse, à confirmer.</li>
+        <li>L'âge de départ possible avec décote est l'âge légal : partir plus tôt réduit la pension.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulation indicative, fondée sur les mesures publiées par LFI (édition 2025, plans 2026, amendements). Elle ne remplace ni votre avis d'imposition ni un relevé de carrière.
+</footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const eur=n=>Math.round(n).toLocaleString('fr-FR')+' €';
+  const sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('fr-FR')+' €';
+  const pct=n=>(n*100).toLocaleString('fr-FR',{maximumFractionDigits:1})+' %';
+  const val=(id,d)=>{const v=parseFloat($(id).value);return isFinite(v)?v:d};
+  let timer={};
+  function later(k,f){clearTimeout(timer[k]);timer[k]=setTimeout(f,150)}
+  async function api(url,body){
+    const r=await fetch(url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    if(!r.ok)throw new Error('Erreur '+r.status);return r.json();
+  }
+  function fail(){document.querySelectorAll('.cards .v').forEach(e=>e.textContent='Indisponible');}
+
+  function setTab(name){
+    const imp=name==='impot';
+    $('p-impot').classList.toggle('hidden',!imp);$('p-retraite').classList.toggle('hidden',imp);
+    $('tab-impot').setAttribute('aria-selected',imp);$('tab-retraite').setAttribute('aria-selected',!imp);
+    try{history.replaceState(null,'','#'+name)}catch(e){}
+  }
+  $('tab-impot').onclick=()=>setTab('impot');$('tab-retraite').onclick=()=>setTab('retraite');
+  if(location.hash==='#retraite')setTab('retraite');
+  window.addEventListener('hashchange',()=>setTab(location.hash==='#retraite'?'retraite':'impot'));
+
+  [15000,20000,30000,40000,60000,100000,200000].forEach(v=>{
+    const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=eur(v);
+    b.onclick=()=>{$('rev').value=v;$('revr').value=Math.min(v,300000);calcTax()};$('presets').appendChild(b)});
+  $('rev').addEventListener('input',()=>{$('revr').value=Math.min(val('rev',0),300000);calcTax()});
+  $('revr').addEventListener('input',()=>{$('rev').value=$('revr').value;calcTax()});
+  ['parts','coef'].forEach(i=>$(i).addEventListener('input',calcTax));
+
+  function calcTax(){later('t',async()=>{
+    try{
+      const rev=Math.max(0,val('rev',0));
+      const d=await api('/api/impot',{revenu:rev,parts:val('parts',1),coefficient:val('coef',1.1271)});
+      $('r-cur').textContent=eur(d.impotActuel);$('r-cur-s').textContent='Taux moyen '+pct(rev?d.impotActuel/rev:0);
+      $('r-lfi').textContent=eur(d.impotLfi);$('r-lfi-s').textContent='Taux moyen '+pct(rev?d.impotLfi/rev:0);
+      const e=d.ecart;$('r-diff-card').className='card res '+(Math.abs(e)<1?'flat':e>0?'up':'down');
+      $('r-diff').textContent=Math.abs(e)<1?'Aucun écart':sgn(e);
+      $('r-diff-s').textContent=Math.abs(e)<1?'':(e>0?"d'impôt en plus, soit ":"d'impôt en moins, soit ")+eur(Math.abs(e)/12)+' par mois';
+      drawChart(rev,d);drawTable(d);
+    }catch(err){fail()}
+  })}
+
+  function drawChart(rev,d){
+    const W=640,H=300,m={l:56,r:14,t:12,b:34},xmax=d.xmax,pts=d.courbe;
+    let ymax=0;pts.forEach(p=>ymax=Math.max(ymax,p[1],p[2]));
+    const step=Math.pow(10,Math.floor(Math.log10(ymax/4||1)));const ys=[1,2,2.5,5,10].map(k=>k*step).find(s=>ymax/s<=5)||step*10;
+    const ytop=Math.ceil(ymax/ys)*ys||ys;
+    const X=x=>m.l+(W-m.l-m.r)*x/xmax,Y=y=>H-m.b-(H-m.t-m.b)*y/ytop;
+    let s='';
+    for(let y=0;y<=ytop+1;y+=ys){s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="var(--line)"/><text x="${m.l-8}" y="${Y(y)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${(y/1000).toLocaleString('fr-FR')} k€</text>`}
+    const xs=xmax/4;for(let i=0;i<=4;i++){const x=xs*i;s+=`<text x="${X(x)}" y="${H-12}" text-anchor="${i==0?'start':i==4?'end':'middle'}" font-size="11" fill="var(--muted)">${(x/1000).toLocaleString('fr-FR')} k€</text>`}
+    const path=k=>pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[k]).toFixed(1)).join('');
+    s+=`<path d="${path(1)}" fill="none" stroke="var(--muted)" stroke-width="2.5"/><path d="${path(2)}" fill="none" stroke="var(--red)" stroke-width="2.5"/>`;
+    if(rev<=xmax){const xr=X(rev);s+=`<line x1="${xr}" x2="${xr}" y1="${m.t}" y2="${H-m.b}" stroke="var(--violet)" stroke-dasharray="4 4"/><circle cx="${xr}" cy="${Y(d.impotActuel)}" r="5" fill="var(--muted)"/><circle cx="${xr}" cy="${Y(d.impotLfi)}" r="5" fill="var(--red)"/>`}
+    $('chart').innerHTML=s;
+  }
+  function drawTable(d){
+    const row=(T,lbl)=>{let h=`<tr><th>${lbl}</th><th>De</th><th>À</th><th>Taux</th><th>Impôt</th></tr>`;
+      T.forEach((t,i)=>{h+=`<tr class="${t.actif?'on':''}"><td>${t.actif?'Votre tranche':'Tranche '+(i+1)}</td><td>${eur(t.de)}</td><td>${t.a===null?'et plus':eur(t.a)}</td><td>${pct(t.taux)}</td><td>${eur(t.impot)}</td></tr>`});return h};
+    $('tbl').innerHTML=row(d.detailActuel,'Actuel')+row(d.detailLfi,'LFI');
+  }
+
+  ['birth','start','gap','tpy','a-legal','l-legal','a-trim','l-trim','auto','step-legal'].forEach(i=>$(i).addEventListener('input',calcRet));
+  function fmt(a){const y=Math.floor(a+1e-9),m=Math.round((a-y)*12);return m===0?y+' ans':m===12?(y+1)+' ans':y+' ans et '+m+' mois'}
+  function calcRet(){later('r',async()=>{
+    try{
+      const d=await api('/api/retraite',{naissance:val('birth',1975),debut:val('start',22),trou:val('gap',0),trimestresParAn:val('tpy',4),tauxPleinAuto:val('auto',67),
+        actuelle:{legal:val('a-legal',64),trimestres:val('a-trim',172)},lfi:{legal:val('l-legal',60),trimestres:val('l-trim',160)},etape:{legal:val('step-legal',62),trimestres:val('l-trim',160)}});
+      const sc=d.scenarios,base=sc[0].age;
+      $('cols').innerHTML=sc.map((s,i)=>{
+        const dd=s.age-base;
+        const dl=i===0?'':`<div><span class="delta ${Math.abs(dd)<1e-6?'zero':''}">${Math.abs(dd)<1e-6?'Pas de différence':(dd<0?'−':'+')+Math.abs(dd).toLocaleString('fr-FR',{maximumFractionDigits:2})+' an'+(Math.abs(dd)>1?'s':'')+" par rapport à aujourd'hui"}</span></div>`;
+        return `<div class="col ${i?'lfi':''}"><div class="t">${s.nom}</div><div class="big">${fmt(s.age)}</div>${dl}
+          <dl><dt>Année de départ :</dt><dd>${s.annee}</dd><dt>Départ possible dès :</dt><dd>${s.ageLegal} ans (avec décote si trimestres manquants)</dd>
+          <dt>Trimestres requis :</dt><dd>${s.trimestres} (${(s.trimestres/4).toLocaleString('fr-FR')} ans)</dd></dl></div>`}).join('');
+    }catch(err){$('cols').innerHTML='<div class="col"><div class="t">Service indisponible</div><p>Réessayez dans un instant.</p></div>'}
+  })}
+  calcTax();calcRet();
+})();
+</script>
